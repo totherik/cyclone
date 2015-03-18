@@ -1,0 +1,42 @@
+diff --git a/lib/generated/storm_types.js b/lib/generated/storm_types.js
+index 406e6c5..2e76455 100644
+--- a/lib/generated/storm_types.js
++++ b/lib/generated/storm_types.js
+@@ -840,7 +840,7 @@ ComponentCommon.prototype.read = function(input) {
+       if (ftype == Thrift.Type.MAP) {
+         var _size24 = 0;
+         var _rtmp328;
+-        this.inputs = {};
++        this.inputs = new Map();
+         var _ktype25 = 0;
+         var _vtype26 = 0;
+         _rtmp328 = input.readMapBegin();
+@@ -855,7 +855,7 @@ ComponentCommon.prototype.read = function(input) {
+           key30.read(input);
+           val31 = new ttypes.Grouping();
+           val31.read(input);
+-          this.inputs[key30] = val31;
++          this.inputs.set(key30, val31);
+         }
+         input.readMapEnd();
+       } else {
+@@ -914,15 +914,11 @@ ComponentCommon.prototype.write = function(output) {
+   output.writeStructBegin('ComponentCommon');
+   if (this.inputs !== null && this.inputs !== undefined) {
+     output.writeFieldBegin('inputs', Thrift.Type.MAP, 1);
+-    output.writeMapBegin(Thrift.Type.STRUCT, Thrift.Type.STRUCT, Thrift.objectLength(this.inputs));
+-    for (var kiter40 in this.inputs)
++    output.writeMapBegin(Thrift.Type.STRUCT, Thrift.Type.STRUCT, this.inputs.size);
++    for (let [ kiter40, viter41 ] of this.inputs)
+     {
+-      if (this.inputs.hasOwnProperty(kiter40))
+-      {
+-        var viter41 = this.inputs[kiter40];
+-        kiter40.write(output);
+-        viter41.write(output);
+-      }
++      kiter40.write(output);
++      viter41.write(output);
+     }
+     output.writeMapEnd();
+     output.writeFieldEnd();
