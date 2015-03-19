@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "babel --optional runtime --compact false --out-dir dist index.js lib/*.js lib/**/*.js scripts/*.js",
     "test": "babel-node  --optional runtime test/harness.js test/*-test.js",
+    "prepublish": "npm run compile",
     "generate": "babel-node scripts/generate.js"
   },
   "keywords": [

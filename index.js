@@ -6,65 +6,84 @@ import StormSubmitter from './lib/storm_submitter';
 import TopologyBuilder from './lib/topology_builder';
 
 
+const DEFAULT_OPTIONS = {
+    name: 'topology',
+    config: {}
+};
+
+
 export default {
 
     Bolt,
 
+
     Spout,
+
 
     Dispatcher,
 
+
     TopologyBuilder,
+
 
     StormSubmitter,
 
+
     LocalCluster,
 
-    run(builder, options) {
 
-        let topology = builder.createTopology();
-        let { name } = options;
+    run(builder, options = { nimbus: {}, config: {}}) {
+        options = Object.assign(DEFAULT_OPTIONS, options);
 
         let argv = process.argv.slice(2);
-        if (argv[0] === '--local') {
+        if (argv.length) {
 
-            let cluster = new LocalCluster();
-            cluster.submitTopology(name, topology);
+            let topology = builder.createTopology();
 
-            cluster.on('connected', () => {
-                console.log('Connected');
-                process.once('SIGINT', function () {
-                    cluster.shutdown();
+            if (argv[0] === '--local') {
+                // OPTION 1: Called locally to start a LocalCluster
+
+                let cluster = new LocalCluster();
+                cluster.submitTopology(topology, options);
+
+                cluster.on('connected', () => {
+                    console.log('Connected');
+                    process.once('SIGINT', function () {
+                        cluster.shutdown();
+                    });
                 });
-            });
 
-            cluster.on('error', err => {
-                console.error(err.stack);
-            });
+                cluster.on('error', err => {
+                    console.error(err.stack);
+                });
 
-            cluster.on('exit', () => {
-                console.log('Local cluster exited.');
-                process.exit();
-            });
+                cluster.on('exit', () => {
+                    console.log('Local cluster exited.');
+                    process.exit();
+                });
 
-        } else if (argv.length) {
+            } else {
+                // OPTION 2: Called by `storm shell`
 
-            let [ host, port, uploadedJarLocation ] = argv;
+                let [ host, port, uploadedJarLocation ] = argv;
+                let nimbus = { host, port };
 
-            console.log(`Submitting '${uploadedJarLocation}' to ${host}:${port}`);
-            StormSubmitter.submitTopology(name, uploadedJarLocation, { nimbus: { host, port } }, topology, function (err, _) {
-                if (err) {
-                    throw err;
-                }
-                console.log('Topology submitted.');
-            });
+                console.log(`Submitting '${uploadedJarLocation}' to ${host}:${port}`);
+                StormSubmitter.submitTopology(options.name, uploadedJarLocation, { nimbus, config: options.config }, topology, function (err, _) {
+                    if (err) {
+                        throw err;
+                    }
+                    console.log('Topology submitted.');
+                });
+
+            }
 
         } else {
 
+            // OPTION 3: Invoked as a task.
             let dispatcher = new Dispatcher((conf, context, done) => {
                 let id = context['task->component'][context.taskid];
-                let component = builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id];
-                done(null, component);
+                done(null, builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id]);
             });
 
             dispatcher.run();

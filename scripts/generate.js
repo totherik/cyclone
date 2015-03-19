@@ -12,52 +12,72 @@ const THRIFT = 'scripts/storm.thrift';
 const DEST = 'lib/generated';
 const PATCH = 'scripts/storm_types.patch';
 
+
 // Clean up previous runs and create dest dir
-console.log(`       rm ${THRIFT}`);
+console.log(`rm ${THRIFT}`);
 rimraf(THRIFT);
 
-console.log(`       rm ${DEST}`);
+console.log(`rm ${DEST}`);
 rimraf(DEST);
 mkdirp(DEST);
 
 
-console.log(`      get ${URL}`);
+console.log(`get ${URL}`);
 Https.get(URL, res => {
-
-    res.pipe(Fs.createWriteStream(THRIFT)).on('finish', () => {
-        console.log(`      gen ${THRIFT}`);
-
-        let child = Child.spawn('thrift', ['-gen', 'js:node', '-out', DEST, THRIFT]);
-        child.on('close', () => {
-
-            eachfile(DEST, exports);
-
-            // Applying Map patch
-            console.log(`git apply ${PATCH}`);
-            Child.spawn('git', [ 'apply', PATCH ], { stdio: [ 'pipe', process.stdout, process.stderr ] });
-        });
-    });
-
+    res.pipe(Fs.createWriteStream(THRIFT)).on('finish', () => generate(THRIFT, DEST));
 });
 
 
+// Use thrift to generate JS from the provided thrift file.
+function generate(thriftFile, dest) {
+    console.log(`gen ${thriftFile}`);
+
+    let child;
+    child = Child.spawn('thrift', ['-gen', 'js:node', '-out', dest, thriftFile]);
+    child.on('exit', () => rewrite(dest));
+}
+
+
+// Apply `exports` to each file in the directory and then apple the
+// provided patch.
+function rewrite(dir) {
+    eachfile(dir, exports);
+
+    // Applying Map patch
+    console.log(`git apply ${PATCH}`);
+    Child.spawn('git', [ 'apply', PATCH ], { stdio: [ 'pipe', process.stdout, process.stderr ] });
+}
+
+
+// Simple helper to recursively traverse a directory
+// and invoke a fn with each located file.
 function eachfile(dir, fn) {
+
     let files = Fs.readdirSync(dir);
+
     for (let file of files) {
-        fn(Path.join(dir, file));
+
+        let path = Path.join(dir, file);
+        let stat = Fs.statSync(path);
+
+        if (stat.isDirectory()) {
+            eachfile(path, fn);
+        } else {
+            fn(path);
+        }
     }
 }
 
 
+// Converts the generated thrift JS into valid 'strict'-safe
+// JS by adding variable declarations for all top-level assignment
+// expressions to the beginning of each file.
 function exports(file) {
     let js = Fs.readFileSync(file, 'utf8');
     let ast = Espree.parse(js);
-
-    console.log(`  prepend ${file}`);
     let identifiers = [];
 
     for (let { type, expression = {} } of ast.body) {
-
         if (type === 'ExpressionStatement') {
 
             let { type: expressionType, left } = expression;
@@ -68,6 +88,7 @@ function exports(file) {
         }
     }
 
+    console.log(`prepend ${file}`);
     let declarations = `var ${identifiers.join(',\n    ')};\n`;
     Fs.writeFileSync(file, declarations + js);
 }
