@@ -1,27 +1,13 @@
-import Email from './lib/email';
-import WordCount from './lib/wordcount';
-import SplitSentence from './lib/splitsentence';
-import RandomSentence from './lib/randomsentence';
-import Cyclone from 'cyclone';
-import { TopologyBuilder, Bolt } from 'cyclone';
-
-
-let random = new RandomSentence([ 'sentence' ]);
-let split = new SplitSentence([ 'word' ]);
-let count = new WordCount([ 'word', 'count' ]);
-
-let log = Bolt.create(function (tuple, done) {
-    let [ word, count ] = tuple.values;
-    this.log(`${word}, ${count}`);
-    done();
-});
+import WordCount from './wordcount';
+import SplitSentence from './splitsentence';
+import RandomSentence from './randomsentence';
+import Cyclone, { TopologyBuilder } from 'cyclone';
 
 
 let builder = new TopologyBuilder();
-builder.setSpout('spout', random);
-builder.setBolt('split', split).shuffleGrouping('spout');
-builder.setBolt('count', count).fieldsGrouping('split', [ 'word' ]);
-builder.setBolt('log', log).fieldsGrouping('count', [ 'word', 'count' ]);
+builder.setSpout('spout', new RandomSentence());
+builder.setBolt('split', new SplitSentence(), 4).shuffleGrouping('spout');
+builder.setBolt('count', new WordCount(), 4).fieldsGrouping('split', [ 'word' ]);
 
 
-Cyclone.run(builder, { name: 'publish' });
+Cyclone.run(builder, { name: 'mytopology' });
