@@ -81,9 +81,11 @@ export default {
         } else {
 
             // OPTION 3: Invoked as a task.
-            let dispatcher = new Dispatcher((conf, context, done) => {
+            let dispatcher = new Dispatcher(function (conf, context, done) {
                 let id = context['task->component'][context.taskid];
-                done(null, builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id]);
+                let component = builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id];
+                component.attach(this);
+                component.initialize(conf, context, done);
             });
 
             dispatcher.run();
