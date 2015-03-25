@@ -1,13 +1,18 @@
-import WordCount from './wordcount';
-import SplitSentence from './splitsentence';
-import RandomSentence from './randomsentence';
-import Cyclone, { TopologyBuilder } from 'cyclone';
+var WordCount = require('./wordcount');
+var SplitSentence = require('./splitsentence');
+var RandomSentence = require('./randomsentence');
+var Cyclone = require('../');
 
+var log = new Cyclone.Bolt();
+log.process = function (tuple, done) {
+    this.log(tuple);
+    done();
+};
 
-let builder = new TopologyBuilder();
+var builder = new Cyclone.TopologyBuilder();
 builder.setSpout('spout', new RandomSentence());
-builder.setBolt('split', new SplitSentence(), 4).shuffleGrouping('spout');
-builder.setBolt('count', new WordCount(), 4).fieldsGrouping('split', [ 'word' ]);
-
+builder.setBolt('split', new SplitSentence()).shuffleGrouping('spout');
+builder.setBolt('count', new WordCount()).fieldsGrouping('split', [ 'word' ]);
+builder.setBolt('log', log).fieldsGrouping('count', [ 'word', 'count' ]);
 
 Cyclone.run(builder, { name: 'mytopology' });

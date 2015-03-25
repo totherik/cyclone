@@ -21,12 +21,12 @@ let argv = minimist(process.argv.slice(2), {
 let { topology } = argv;
 let rel = topology;
 let abs = Path.resolve(topology);
-let root = findroot(abs);
+let root = Utils.findroot(abs);
 
 if (rel === abs) {
     // An absolute path was provided, so derive a path
     // relative to the module root (being `package.json`)
-    rel = Path.relative(findroot('.'), rel);
+    rel = Utils.relative(abs);
 }
 
 if (Fs.existsSync(abs)) {
@@ -60,31 +60,3 @@ let storm = Child.spawn('storm', [ 'shell', 'resources/', 'node', Path.join('res
 let [ _, stdout, stderr ] =  storm.stdio;
 stdout.pipe(process.stdout);
 stderr.pipe(process.stderr);
-
-
-function findroot(dir) {
-    dir = Path.resolve(dir);
-
-    if (Fs.statSync(dir).isFile()) {
-        dir = Path.dirname(dir);
-    }
-
-    return Path.dirname(findup(dir, 'package.json'));
-}
-
-function findup(dir, file) {
-    let files = Fs.readdirSync(dir);
-
-    for (let filename of files) {
-        if (filename === file) {
-            return Path.join(dir, filename);
-        }
-    }
-
-    let parent = Path.dirname(dir);
-    if (parent === dir || parent === '/') {
-        return undefined;
-    }
-
-    return findup(parent, file);
-}
