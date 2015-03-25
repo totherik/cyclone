@@ -41,8 +41,8 @@ export default {
             let topology = builder.createTopology();
 
             if (argv[0] === '--local') {
-                // OPTION 1: Called locally to start a LocalCluster
 
+                // OPTION 1: Called locally to start a LocalCluster
                 let cluster = new LocalCluster();
                 cluster.submitTopology(topology, options);
 
@@ -63,8 +63,8 @@ export default {
                 });
 
             } else {
-                // OPTION 2: Called by `storm shell`
 
+                // OPTION 2: Called by `storm shell`
                 let [ host, port, uploadedJarLocation ] = argv;
                 let nimbus = { host, port };
 
