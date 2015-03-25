@@ -34,8 +34,8 @@ if (Fs.existsSync(abs)) {
         // Exists, but is a directory (e.g. '.') so find
         // `main` from package.json and update paths
         let pkg = require(Path.join(root, 'package.json'));
+        rel = pkg.main;
         abs = Path.resolve(pkg.main);
-        rel = Path.relative(root, abs);
     }
 } else {
     throw new Error(`Unable to locate topology ${topology}`);

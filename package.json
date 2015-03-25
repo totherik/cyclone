@@ -1,7 +1,7 @@
 {
   "name": "cyclone",
   "version": "1.0.0",
-  "description": "An Apache Storm JavaScript implementation.",
+  "description": "A JavaScript Apache Storm topology implementation.",
   "main": "dist/index.js",
   "scripts": {
     "compile": "babel --optional runtime --compact false --out-dir dist index.js bin/*.js lib/*.js lib/**/*.js scripts/*.js",
