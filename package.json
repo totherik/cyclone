@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "babel-runtime": "4.7.8",
+    "debuglog": "^1.0.1",
     "fs-extra": "^0.16.5",
     "minimist": "^1.1.1",
     "thrift": "~0.9.2"

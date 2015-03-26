@@ -5,7 +5,7 @@ var Cyclone = require('../');
 
 var log = new Cyclone.Bolt();
 log.process = function (tuple, done) {
-    this.log(tuple);
+    this.debug(tuple);
     done();
 };
 
@@ -15,4 +15,4 @@ builder.setBolt('split', new SplitSentence()).shuffleGrouping('spout');
 builder.setBolt('count', new WordCount()).fieldsGrouping('split', [ 'word' ]);
 builder.setBolt('log', log).fieldsGrouping('count', [ 'word', 'count' ]);
 
-Cyclone.run(builder, { name: 'mytopology' });
+Cyclone.run(builder, { name: 'mytopology', config: { 'topology.debug': true } });

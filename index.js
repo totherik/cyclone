@@ -1,3 +1,4 @@
+import debuglog from 'debuglog';
 import Bolt from './lib/bolt';
 import Spout from './lib/spout';
 import Dispatcher from './lib/dispatcher';
@@ -6,6 +7,7 @@ import StormSubmitter from './lib/storm_submitter';
 import TopologyBuilder from './lib/topology_builder';
 
 
+const debug = debuglog('cyclone');
 const DEFAULT_OPTIONS = {
     name: 'topology',
     config: {}
@@ -47,18 +49,18 @@ export default {
                 cluster.submitTopology(topology, options);
 
                 cluster.on('connected', () => {
-                    console.log('Connected');
+                    debug('Connected');
                     process.once('SIGINT', function () {
                         cluster.shutdown();
                     });
                 });
 
                 cluster.on('error', err => {
-                    console.error(err.stack);
+                    debug(err.stack);
                 });
 
                 cluster.on('exit', () => {
-                    console.log('Local cluster exited.');
+                    debug('Local cluster exited.');
                     process.exit();
                 });
 
@@ -68,12 +70,12 @@ export default {
                 let [ host, port, uploadedJarLocation ] = argv;
                 let nimbus = { host, port };
 
-                console.log(`Submitting '${uploadedJarLocation}' to ${host}:${port}`);
+                debug(`Submitting '${options.name}' (${uploadedJarLocation}) to ${host}:${port}.`);
                 StormSubmitter.submitTopology(options.name, uploadedJarLocation, { nimbus, config: options.config }, topology, function (err, _) {
                     if (err) {
                         throw err;
                     }
-                    console.log('Topology submitted.');
+                    debug(`Topology '${options.name}' submitted.`);
                 });
 
             }
@@ -85,7 +87,7 @@ export default {
                 let id = context['task->component'][context.taskid];
                 let component = builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id];
                 component.attach(this);
-                component.initialize(conf, context, done);
+                component.init(conf, context, done);
             });
 
             dispatcher.run();
