@@ -87,7 +87,7 @@ export default {
                 let id = context['task->component'][context.taskid];
                 let component = builder.bolts[id] || builder.spouts[id] || builder.state_spouts[id];
                 component.attach(this);
-                component.init(conf, context, done);
+                component.initialize(conf, context, done);
             });
 
             dispatcher.run();

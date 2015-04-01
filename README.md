@@ -93,7 +93,7 @@ export default class MyBolt extends Bolt {
 
 - `getComponentConfiguration()` (optional, defaults to `{}`)
 
-- `initialize(config, context, done)` (optional)
+- `prepare(config, context, done)` (optional)
 
 - `process(tuple, done)` (required)
 

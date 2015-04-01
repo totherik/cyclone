@@ -34,7 +34,7 @@ test('bolt', t => {
 
             bolt.attach(this);
 
-            bolt.initialize = function (conf, context, done) {
+            bolt.prepare = function (conf, context, done) {
                 t.equal(conf, args.conf);
                 t.equal(context, args.context);
                 t.equal(typeof done, 'function');
